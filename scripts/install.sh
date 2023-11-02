@@ -16,34 +16,38 @@ echo "/swapfile swap swap defaults 0 0" >> /etc/fstab
 echo 'INSTALLER: Expanded swap'
 
 # convert into Oracle Linux 7
-curl -O https://linux.oracle.com/switch/centos2ol.sh
-sh centos2ol.sh
-rm /home/vagrant/centos2ol
+curl https://raw.githubusercontent.com/oracle/centos2ol/main/centos2ol.sh -o /home/vagrant/centos2ol.sh
+bash /home/vagrant/centos2ol.sh
+rm /home/vagrant/centos2ol.sh
 
-echo 'INSTALLER: Now running Oracle Linux 6'
+# echo 'INSTALLER: Now running Oracle Linux 6'
+
+# https://blog.csdn.net/shilukun/article/details/107055848
+# 配置合适的yum源，需要oracle 提供的yum源，同时我也配好了阿里的镜像源 
+# wget -O /etc/yum.repos.d/oracle.repo http://public-yum.oracle.com/public-yum-ol7.repo
+# wget -O /etc/yum.repos.d/epel.repo  http://mirrors.aliyun.com/repo/epel-7.repo
+# sed -i 's/gpgcheck=1/gpgcheck=0/g' /etc/yum.repos.d/oracle.repo 
+# yum clean all
+# yum makecache
 
 # install required libraries
-yum install -y nano
-yum install -y libaio
-yum install -y libaio-devel
-yum install -y kernel-headers
-yum install -y kernel-devel
+# yum install -y nano libaio libaio-devel kernel-headers kernel-devel
 
 # get up to date
-yum upgrade -y
-yum update -y
+#yum upgrade -y
+#yum update -y
 
 echo 'INSTALLER: System updated'
 
 # fix locale warning
-yum reinstall -y glibc-common
+# yum reinstall -y glibc-common
 echo LANG=en_US.utf-8 >> /etc/environment
 echo LC_ALL=en_US.utf-8 >> /etc/environment
 
 echo 'INSTALLER: Locale set'
 
 # install Oracle Database prereq packages
-yum install -y oracle-rdbms-server-12cR1-preinstall
+yum -y install oracle-database-server-12cR2-preinstall
 
 echo 'INSTALLER: Oracle preinstall complete'
 
@@ -55,7 +59,7 @@ echo 'INSTALLER: Oracle directories created'
 
 # set environment variables
 echo "export ORACLE_BASE=/opt/oracle" >> /home/oracle/.bashrc \
- && echo "export ORACLE_HOME=/opt/oracle/product/12.1.0.2/dbhome_1" >> /home/oracle/.bashrc \
+ && echo "export ORACLE_HOME=/opt/oracle/product/12.2.0.1.0/dbhome_1" >> /home/oracle/.bashrc \
  && echo "export ORACLE_SID=orcl" >> /home/oracle/.bashrc \
  && echo "export PATH=\$PATH:\$ORACLE_HOME/bin" >> /home/oracle/.bashrc
 
@@ -64,7 +68,7 @@ echo 'INSTALLER: Environment variables set'
 # install Oracle
 su -l oracle -c "yes | /vagrant/database/runInstaller -silent -showProgress -ignorePrereq -waitforcompletion -responseFile /vagrant/ora-response/db_install.rsp"
 /opt/oraInventory/orainstRoot.sh
-/opt/oracle/product/12.1.0.2/dbhome_1/root.sh
+/opt/oracle/product/12.2.0.1.0/dbhome_1/root.sh
 
 echo 'INSTALLER: Oracle installed'
 
@@ -79,7 +83,7 @@ echo 'INSTALLER: Oracle installed'
 # And then to fix the error on relinking, reinstall Perl:
 # Ref: https://dbasolved.com/2015/08/24/issue-with-perl-in-oracle_home-during-installs/
 
-ORACLE_HOME=/opt/oracle/product/12.1.0.2/dbhome_1
+ORACLE_HOME=/opt/oracle/product/12.2.0.1.0/dbhome_1
 
 # Reinstall Perl
 wget http://www.cpan.org/src/5.0/perl-5.14.4.tar.gz -P /tmp/
@@ -109,6 +113,7 @@ echo 'INSTALLER: Listener created'
 su -l oracle -c "dbca -silent -createDatabase -responseFile /vagrant/ora-response/dbca.rsp"
 echo 'INSTALLER: Database created'
 
+# 修改oratab配置如下，这样就可以通过dbstart 启动实例，也可以通过dbshut关闭实例。
 sed '$s/N/Y/' /etc/oratab | sudo tee /etc/oratab > /dev/null
 echo 'INSTALLER: Oratab configured'
 

@@ -1,10 +1,11 @@
 # oracle12c-vagrant
-A vagrant box that provisions Oracle 12c automatically, using only Vagrant and a shell script.
+
+A vagrant box that provisions Oracle 12c automatically, using only Vagrant and a shell script. Forked from [repo](https://github.com/steveswinsburg/oracle12c-vagrant)
 
 ## Getting started
+
 1. Clone this repository
-2. Download the Oracle Database 12c binaries `linuxamd64_12102_database_1of2.zip` and `linuxamd64_12102_database_2of2.zip`
-from http://www.oracle.com/technetwork/database/enterprise-edition/downloads/index.html and unzip to `database/`
+2. Download [Oracle Database 12.2.0.1.0.0](https://edelivery.oracle.com/osdc/faces/SoftwareDelivery) and unzip to `database/`
   * Ensure you unzip into the same directory and they merge. There are some common directories in each. On the commandline, you can run `unzip '*.zip'` to do this for you.
 3. Install Virtualbox
 4. Install Vagrant
@@ -15,12 +16,16 @@ from http://www.oracle.com/technetwork/database/enterprise-edition/downloads/ind
 8. You can shutdown the box via the usual `vagrant halt` and the start it up again via `vagrant up`.
 
 ## Connecting to Oracle
-* Hostname: `localhost`
-* Port: `1521`
-* SID: `orcl`
-* All passwords are `password`.
+
+- godbtest `%connect 'oracle://t2:ca@127.0.0.1:1521/ORCLPDB?lob fetch=post'`
+  
+```sql
+CREATE TABLE t2 (id char(27)  primary key, name varchar(255), addr varchar(255), email varchar(255), phone varchar(255), age varchar(3), idc varchar(256));
+insert into t2(id, name,addr,email,phone,age,idc) values('@ksuid', '@姓名', '@地址', '@邮箱', '@手机', '@random_int(15-95)', '@身份证');
+```
 
 ## Tablespaces
+
 The folder `oradata` is mounted as a shared folder with permissions for Oracle to use it. If you have Oracle schemas that will consume a lot of space, create a tablespace for your schema in this directory instead of using the built in tablespaces. See [tablespace.sql](/scripts/tablespace.sql) for an example of how to create a tablespace in this directory.
 
 ## Other info
@@ -30,33 +35,88 @@ The folder `oradata` is mounted as a shared folder with permissions for Oracle t
 * The Oracle installation path is `/opt/oracle/`
 * On the guest OS, the directory `/vagrant` is a shared folder and maps to wherever you have this file checked out.
 
-## Known issues
+## log
 
-#### Repeated authentication failure message
+```sh
+[oracle@localhost ~]$ sqlplus / as sysdba
 
-On `vagrant up` if you experience this issue:
+SQL*Plus: Release 12.2.0.1.0 Production on Thu Nov 2 02:21:12 2023
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> show pdbs;
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 ORCLPDB                        MOUNTED
+SQL> alter session set container=ORCLPDB;
+
+Session altered.
+
+SQL> startup;
+Pluggable Database opened.
+SQL> create tablespace tbs_t2 datafile 't2.dbf' size 10M autoextend on;
+
+Tablespace created.
+
+SQL> create temporary tablespace tbs_t2_temp tempfile 't2_temp.dbf' size 5M autoextend on;
+
+Tablespace created.
+
+SQL> create user t2 identified by "ca" default tablespace tbs_t2 temporary tablespace tbs_t2_temp;             
+
+User created.
+
+SQL> grant connect, resource to t2;
+
+Grant succeeded.
+
+SQL> grant unlimited tablespace to t2;
+
+Grant succeeded.
+
+SQL> ALTER USER t2 quota unlimited on tbs_t2;
+
+User altered.
+
+SQL> CREATE OR REPLACE TRIGGER open_pdbs
+  AFTER STARTU  2  P ON DATABASE
+BEGIN
+   EXECUTE IMMEDIATE 'ALTER PL  3    4  UGGABLE DATABASE ALL OPEN';
+END open_pdbs;
+/  5    6  
+
+Trigger created.
+
+SQL> exit
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
 ```
-default: Error: Authentication failure. Retrying...
-default: Error: Authentication failure. Retrying...
-default: Error: Authentication failure. Retrying...
-default: Error: Authentication failure. Retrying...
-default: Error: Authentication failure. Retrying...
+
+```sh
+$ godbtest
+> %connect 'oracle://t2:ca@127.0.0.1:1521/ORCLPDB?lob fetch=post'
+> CREATE TABLE t2 (id char(27)  primary key, name varchar(255), addr varchar(255), email varchar(255), phone varchar(255), age varchar(3), idc varchar(256));
++--------------+--------------+-------------+
+| lastInsertId | rowsAffected | cost        |
++--------------+--------------+-------------+
+|            0 |            0 | 109.57724ms |
++--------------+--------------+-------------+
+> insert into t2(id, name,addr,email,phone,age,idc) values('@ksuid', '@姓名', '@地址', '@邮箱', '@手机', '@random_int(15-95)', '@身份证');
+2023/11/02 10:43:54 SQL: insert into t2(id, name, addr, email, phone, age, idc) values (:1, :2, :3, :4, :5, :6, :7) ::: Args: ["2XbLrxPpXcdbIbyl...","雍璕碋","内蒙古自治\ufffd...","odldrzuz@lmtwd.s...","14565225308",86,"4181572009021599..."]
++--------------+--------------+--------------+
+| lastInsertId | rowsAffected | cost         |
++--------------+--------------+--------------+
+|            0 |            1 | 1.193626675s |
++--------------+--------------+--------------+
+> select * from t2;
++-----------------------------+--------+--------------------------------------------------------+----------------------+-------------+-----+--------------------+
+| ID                          | NAME   | ADDR                                                   | EMAIL                | PHONE       | AGE | IDC                |
++-----------------------------+--------+--------------------------------------------------------+----------------------+-------------+-----+--------------------+
+| 2XbLrxPpXcdbIbyl005fBZqZure | 雍璕碋 | 内蒙古自治区乌兰察布市嗪貶路5924号黢蹵小区11单元1002室 | odldrzuz@lmtwd.space | 14565225308 | 86  | 418157200902159939 |
++-----------------------------+--------+--------------------------------------------------------+----------------------+-------------+-----+--------------------+
 ```
-Then you may have hit a bug in vagrant 1.8.5. See
-http://stackoverflow.com/questions/22922891/vagrant-ssh-authentication-failure
-
-The solution is to:
-```
-vagrant ssh
-password: vagrant
-chmod 0600 ~/.ssh/authorized_keys
-exit
-```
-
-then `vagrant reload`.
-
-#### Connection time after startup
-Once Oracle and the listener starts up, it may take a few moments until you are able to connect to the DB, eg via SQL Developer.
-
-#### Provisioning fails with "id: oracle: no such user"
-Comment out line 35 in the Vagrant file. This mounts an additional folder however depending on how long it takes the machine to boot, the database might startup before that happens and things will complain.

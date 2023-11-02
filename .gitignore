@@ -2,3 +2,4 @@
 database/
 *.zip
 vagrant/*.dbf
+*.box

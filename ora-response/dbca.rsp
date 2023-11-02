@@ -1,17 +1,70 @@
-[GENERAL]
-RESPONSEFILE_VERSION = "12.1.0"
-OPERATION_TYPE = "createDatabase"
-
-[CREATEDATABASE]
-GDBNAME = "orcl"
-DATABASECONFTYPE  = "SI"
-SID = "orcl"
-TEMPLATENAME = "General_Purpose.dbc"
-SYSPASSWORD = "password"
-SYSTEMPASSWORD = "password"
-STORAGETYPE=FS
-CHARACTERSET="AL32UTF8"
-NATIONALCHARACTERSET= "AL16UTF16"
-AUTOMATICMEMORYMANAGEMENT = "TRUE"
-DATABASETYPE = "MULTIPURPOSE"
-TOTALMEMORY = "4000"
+# 21行 不可更改
+responseFileVersion=/oracle/assistants/rspfmt_dbca_response_schema_v12.2.0
+# 32行 全局数据库名
+gdbName=orcl
+# 42行 系统标识符
+sid=orcl
+# 52行
+databaseConfigType=SI
+# 74行
+policyManaged=false
+# 88行
+createServerPool=false
+# 127行
+force=false
+# 163行
+createAsContainerDatabase=true
+# 172行
+numberOfPDBs=1
+# 182行
+pdbName=orclpdb
+# 192行
+useLocalUndoForPDBs=true
+# 203行 库密码
+pdbAdminPassword=********
+# 223行
+templateName=/opt/oracle/product/12.2.0.1.0/dbhome_1/assistants/dbca/templates/General_Purpose.dbc
+# 233行 超级管理员密码
+sysPassword=********
+# 233行 管理员密码
+systemPassword=********
+# 273行
+emExpressPort=5500
+# 284行
+runCVUChecks=false
+# 313行
+omsPort=0
+# 341行
+dvConfiguration=false
+# 391行
+olsConfiguration=false
+# 401行
+datafileJarLocation={ORACLE_HOME}/assistants/dbca/templates/
+# 411行
+datafileDestination={ORACLE_BASE}/oradata/{DB_UNIQUE_NAME}/
+# 421行
+recoveryAreaDestination={ORACLE_BASE}/fast_recovery_area/{DB_UNIQUE_NAME}
+# 431行
+storageType=FS
+# 468行 字符集创建库之后不可更改
+characterSet=AL32UTF8
+# 478行
+nationalCharacterSet=AL16UTF16
+# 488行
+registerWithDirService=false
+# 526行
+listeners=LISTENER
+# 546行
+variables=DB_UNIQUE_NAME=orcl,ORACLE_BASE=/opt/oracle,PDB_NAME=,DB_NAME=orcl,ORACLE_HOME=/opt/oracle/product/12.2.0.1.0/dbhome_1,SID=orcl
+# 555行
+initParams=undo_tablespace=UNDOTBS1,memory_target=796MB,processes=300,db_recovery_file_dest_size=2780MB,nls_language=AMERICAN,dispatchers=(PROTOCOL=TCP) (SERVICE=orclXDB),db_recovery_file_dest={ORACLE_BASE}/fast_recovery_area/{DB_UNIQUE_NAME},db_block_size=8192BYTES,diagnostic_dest={ORACLE_BASE},audit_file_dest={ORACLE_BASE}/admin/{DB_UNIQUE_NAME}/adump,nls_territory=AMERICA,local_listener=LISTENER_orcl,compatible=12.2.0,control_files=("{ORACLE_BASE}/oradata/{DB_UNIQUE_NAME}/control01.ctl", "{ORACLE_BASE}/fast_recovery_area/{DB_UNIQUE_NAME}/control02.ctl"),db_name=cdb1,audit_trail=db,remote_login_passwordfile=EXCLUSIVE,open_cursors=300
+# 565行
+sampleSchema=false
+# 574行
+memoryPercentage=40
+# 584行
+databaseType=MULTIPURPOSE
+# 594行
+automaticMemoryManagement=false
+# 604行
+totalMemory=0
