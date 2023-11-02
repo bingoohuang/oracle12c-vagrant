@@ -120,3 +120,44 @@ $ godbtest
 | 2XbLrxPpXcdbIbyl005fBZqZure | 雍璕碋 | 内蒙古自治区乌兰察布市嗪貶路5924号黢蹵小区11单元1002室 | odldrzuz@lmtwd.space | 14565225308 | 86  | 418157200902159939 |
 +-----------------------------+--------+--------------------------------------------------------+----------------------+-------------+-----+--------------------+
 ```
+
+## 备份 vagrant 
+
+```sh
+$ vagrant halt
+$ vagrant package --output oracle12.2.box
+$ ls -hl /Volumes/e1t/soft/oracle12.2.box 
+-rw-r--r--  1 bingoo  staff   5.7G 11  2 11:01 /Volumes/e1t/soft/oracle12.2.box
+```
+
+gzip 压缩没有效果
+
+## 虚拟机信息
+
+```sh
+➜  oracle12c-vagrant git:(master) ✗ vagrant ssh
+Last login: Thu Nov  2 02:36:12 2023 from 10.0.2.2
+[vagrant@localhost ~]$ uname -a
+Linux localhost.localdomain 5.4.17-2136.324.5.3.el7uek.x86_64 #2 SMP Tue Oct 10 12:44:19 PDT 2023 x86_64 x86_64 x86_64 GNU/Linux
+[vagrant@localhost ~]$ cat /etc/*release
+Oracle Linux Server release 7.9
+NAME="Oracle Linux Server"
+VERSION="7.9"
+ID="ol"
+ID_LIKE="fedora"
+VARIANT="Server"
+VARIANT_ID="server"
+VERSION_ID="7.9"
+PRETTY_NAME="Oracle Linux Server 7.9"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:oracle:linux:7:9:server"
+HOME_URL="https://linux.oracle.com/"
+BUG_REPORT_URL="https://github.com/oracle/oracle-linux"
+
+ORACLE_BUGZILLA_PRODUCT="Oracle Linux 7"
+ORACLE_BUGZILLA_PRODUCT_VERSION=7.9
+ORACLE_SUPPORT_PRODUCT="Oracle Linux"
+ORACLE_SUPPORT_PRODUCT_VERSION=7.9
+Red Hat Enterprise Linux Server release 7.9 (Maipo)
+Oracle Linux Server release 7.9
+```
