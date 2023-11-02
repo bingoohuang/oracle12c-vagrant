@@ -86,24 +86,24 @@ echo 'INSTALLER: Oracle installed'
 ORACLE_HOME=/opt/oracle/product/12.2.0.1.0/dbhome_1
 
 # Reinstall Perl
-wget http://www.cpan.org/src/5.0/perl-5.14.4.tar.gz -P /tmp/
-tar -xzf /tmp/perl-5.14.4.tar.gz -C /tmp/
-cd /tmp/perl-5.14.4
-./Configure -des -Dprefix=$ORACLE_HOME/perl
-make
-make install
-chown oracle:oinstall $ORACLE_HOME/perl
-
-# Recompile and relink
-su -l oracle -c "mv $ORACLE_HOME/rdbms/lib/config.o $ORACLE_HOME/rdbms/lib/config.o.bad"
-su -l oracle -c "cp $ORACLE_HOME/javavm/jdk/jdk6/lib/libjavavm12.a $ORACLE_HOME/lib/"
-su -l oracle -c "chown oracle:oinstall $ORACLE_HOME/lib/libjavavm12.a"
-su -l oracle -c "make -f $ORACLE_HOME/rdbms/lib/ins_rdbms.mk install"
-su -l oracle -c "make -f $ORACLE_HOME/network/lib/ins_net_server.mk install"
-su -l oracle -c "make -kf $ORACLE_HOME/sqlplus/lib/ins_sqlplus.mk install"
-su -l oracle -c "$ORACLE_HOME/bin/relink all"
-
-echo 'INSTALLER: Oracle installation fixed and relinked'
+# wget http://www.cpan.org/src/5.0/perl-5.14.4.tar.gz -P /tmp/
+# tar -xzf /tmp/perl-5.14.4.tar.gz -C /tmp/
+# cd /tmp/perl-5.14.4
+# ./Configure -des -Dprefix=$ORACLE_HOME/perl
+# make
+# make install
+# chown oracle:oinstall $ORACLE_HOME/perl
+# 
+# # Recompile and relink
+# su -l oracle -c "mv $ORACLE_HOME/rdbms/lib/config.o $ORACLE_HOME/rdbms/lib/config.o.bad"
+# su -l oracle -c "cp $ORACLE_HOME/javavm/jdk/jdk6/lib/libjavavm12.a $ORACLE_HOME/lib/"
+# su -l oracle -c "chown oracle:oinstall $ORACLE_HOME/lib/libjavavm12.a"
+# su -l oracle -c "make -f $ORACLE_HOME/rdbms/lib/ins_rdbms.mk install"
+# su -l oracle -c "make -f $ORACLE_HOME/network/lib/ins_net_server.mk install"
+# su -l oracle -c "make -kf $ORACLE_HOME/sqlplus/lib/ins_sqlplus.mk install"
+# su -l oracle -c "$ORACLE_HOME/bin/relink all"
+# 
+# echo 'INSTALLER: Oracle installation fixed and relinked'
 
 # create listener via netca
 su -l oracle -c "netca -silent -responseFile /vagrant/ora-response/netca.rsp"

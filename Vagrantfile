@@ -7,7 +7,7 @@ VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.box = "bento/centos-7.2"
-  config.vm.network "private_network", ip: "10.0.2.15"
+  # config.vm.network "private_network", ip: "10.0.2.15"
 
 
   #config.vm.box_check_update = true
