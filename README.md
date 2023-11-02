@@ -63,7 +63,14 @@ SQL> startup;
 
 Pluggable Database opened.
 
-# 保存状态 alter pluggable database all save state;
+SQL> alter session set container=CDB$ROOT;
+
+Session altered.
+
+# 保存状态，下次重启时，所有数据库都能自动启动。
+SQL> alter pluggable database all save state;
+
+Pluggable database altered.
 
 SQL> create tablespace tbs_t2 datafile 't2.dbf' size 10M autoextend on;
 
