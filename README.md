@@ -179,3 +179,38 @@ ORACLE_SUPPORT_PRODUCT_VERSION=7.9
 Red Hat Enterprise Linux Server release 7.9 (Maipo)
 Oracle Linux Server release 7.9
 ```
+
+## 查看当前会话所在的容器
+
+Howto get current session container in Oracle 12c
+
+```sh
+SQL> show con_name;
+
+CON_NAME
+------------------------------
+CDB$ROOT
+
+SQL> select SYS_CONTEXT('USERENV', 'CON_NAME') NAME FROM DUAL;
+
+NAME
+--------------------------------------------------------------------------------
+CDB$ROOT
+
+SQL> alter session set container=ORCLPDB;
+
+Session altered.
+
+SQL> show con_name;
+
+CON_NAME
+------------------------------
+ORCLPDB
+
+SQL> select SYS_CONTEXT('USERENV', 'CON_NAME') NAME FROM DUAL;
+
+NAME
+--------------------------------------------------------------------------------
+ORCLPDB
+
+```
