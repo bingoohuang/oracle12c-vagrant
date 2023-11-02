@@ -204,3 +204,113 @@ total 29M
 -rw-r-----. 1 oracle oinstall  28M Nov  2 06:53 t3.dbf
 -rw-r-----. 1 oracle oinstall 5.1M Nov  2 06:31 t3_temp.dbf
 ```
+
+## unmount
+
+```sh
+[oracle@localhost oracle]$ ls -lR plaindbs/
+plaindbs/:
+total 29240
+-rw-r-----. 1 oracle oinstall 28647424 Nov  2 07:31 t3.dbf
+-rw-r-----. 1 oracle oinstall  5251072 Nov  2 06:31 t3_temp.dbf
+[oracle@localhost oracle]$ fusermount -u plaindbs
+[oracle@localhost oracle]$ ls -lR plaindbs/
+plaindbs/:
+total 0
+[oracle@localhost oracle]$
+```
+
+如果遇到 `Device or resource busy`，使用 `fuser -m /path/to/mount/point`  查看哪个进程占用了这个资源，或者强制卸载 `fusermount -uz /path/to/mount/point`
+
+## 迁移表空间文件
+
+[Online Move Datafile in Oracle Database 12c Release 1 (12.1)](https://oracle-base.com/articles/12c/online-move-datafile-12cr1)
+
+- `SELECT tablespace_name, file_name FROM dba_data_files;`
+- `ALTER DATABASE MOVE DATAFILE '/opt/oracle/product/12.2.0.1.0/dbhome_1/dbs/t2.dbf' TO '/opt/oracle/plaindbs/t2.dbf';`
+
+**临时表空间文件，不能简单的移动**
+
+
+- [Oracle Database 12c: Moving a datafile is now possible online](https://www.dbi-services.com/blog/oracle-database-12c-moving-a-datafile-is-now-possible-online/)
+
+Gone are the days where you had to put a tablespace or your complete database offline in order to move or rename a datafile. Oracle 12c features a new command that allows to move datafiles when both database and datafile are online!
+
+Up to Oracle 11.2.0.3, you had three ways to relocate a datafile:
+
+- Put the tablespace offline
+- Put the datafile offline
+- Shutdown and mount the database
+
+### Oracle 11g: Tablespace offline
+
+Renaming a datafile by switching offline its tablespace requires four steps:
+
+1. Switching the tablespace offline  `SQL> ALTER TABLESPACE DEMO OFFLINE NORMAL;`
+2. Moving the datafile with an Operating System command `$ mv '/u01/oradata/DBTEST/demo1.dbf' '/u01/oradata/DBTEST/demo01.dbf'`
+3. Changing the pointer to the data file `SQL> ALTER DATABASE RENAME FILE '/u01/oradata/DBTEST/demo1.dbf' TO '/u01/oradata/DBTEST/demo01.dbf';`
+4. Switching the tablespace online `SQL> ALTER TABLESPACE DEMO ONLINE;`
+
+There are two important drawbacks:
+
+- The database is partially unavailable during the operation: All data registered on the tablespace that is offline is unavailable.
+- The default tablespace and the default temp tablespace cannot be switched offline.
+
+### Oracle 11g: Datafile offline
+
+Renaming a datafile this way requires one step more (5):
+
+1. Switching the datafile offline `SQL> ALTER DATABASE DATAFILE '/u01/oradata/DBTEST/demo1.dbf' OFFLINE;`
+2. Moving the datafile with an Operating System command `$ mv '/u01/oradata/DBTEST/demo1.dbf' '/u01/oradata/DBTEST/demo01.dbf'`
+3. Changing the pointer to the data file `SQL> ALTER DATABASE RENAME FILE '/u01/oradata/DBTEST/demo1.dbf' TO '/u01/oradata/DBTEST/demo01.dbf';`
+4. Recovering the datafile before switching it online `SQL> ALTER DATABASE RECOVER DATAFILE '/u01/oradata/DBTEST/demo01.dbf';`
+5. Switching the datafile online `SQL> ALTER DATABASE DATAFILE '/u01/oradata/DBTEST/demo01.dbf' ONLINE;`
+
+There are two important drawbacks:
+
+- The database is partially unavailable during the operation: All data registered on the datafile that is offline is unavailable.
+- The datafile needs a media recovery since it is switched offline and SCN cannot be updated during offline time.
+
+### Oracle 11g: Shutdown and mount the database
+
+The ultimate way to rename datafiles is to shutdown and mount the database. It allows to alter files that cannot be altered when the database is running – such as temporary tablespace, redo log files, etc. It requires five steps:
+
+1. Shutting down the database `SQL> SHUTDOWN IMMEDIATE;`
+1. Mounting the database `SQL> STARTUP MOUNT;`
+1. Moving the datafile with an Operating System command `$ mv '/u01/oradata/DBTEST/demo1.dbf' '/u01/oradata/DBTEST/demo01.dbf'`
+1. Changing the pointer to the data file `SQL> ALTER DATABASE RENAME FILE '/u01/oradata/DBTEST/demo1.dbf' TO '/u01/oradata/DBTEST/demo01.dbf';`
+1. Starting the database `SQL> ALTER DATABASE OPEN;`
+
+The main drawback is simple to identify: The whole database is unavailable during the operation.
+In any case, up to Oracle 11g, a maintenance window was required in order to play with datafiles.
+
+### Oracle 12c: Alter Database Move Datafile
+
+Starting with Oracle 12.1, you can now use the command ALTER DATABASE MOVE DATAFILE in order to rename, relocate, or copy a datafile when the datafiles or the database are online. One step only is required for any of these actions and the database remains entirely available in read and write for users, without any data loss.
+
+You should however be aware of some rules:
+
+By default, Oracle automatically deletes old data file after moving them and prevents the user from overwriting an existing file.
+When you move a data file, Oracle first makes a copy of the datafile. Then, when the file is successfully copied, pointers to the datafile are updated and the old file is removed from the file system. This is why the operation requires twice the size of the files to be copied as free space.
+Let’s have a look at some examples for the renaming or relocating of a datafile:
+
+1) Renaming a datafile `SQL> ALTER DATABASE MOVE DATAFILE '/u01/oradata/DBTEST/demo1.dbf' TO '/u01/oradata/DBTEST/demo01.dbf';`
+2) Relocating a datafile `SQL> ALTER DATABASE MOVE DATAFILE '/u01/oradata/DBTEST/demo01.dbf' TO '/u02/oradata/DBTEST/demo01.dbf';`
+
+The available options are:
+
+`KEEP`: to keep the old datafile, used to make a copy of the file. Note that the pointer will be updated to the new file,the  old file only remains as unused on the filesystem. Note that on Windows, independently of the fact that the KEEP option is used or not, the old data file is not automatically deleted by Oracle. The user has to delete it manually after the copy is successfully performed.
+
+`SQL> ALTER DATABASE MOVE DATAFILE '/u01/oradata/DBTEST/demo01.dbf' TO '/u02/oradata/DBTEST/demo01.dbf' KEEP;`
+
+`REUSE`: to overwrite an existing file.
+
+`SQL> ALTER DATABASE MOVE DATAFILE '/u01/oradata/DBTEST/demo01.dbf' TO '/u02/oradata/DBTEST/demo01.dbf' REUSE;`
+
+Moving a datafile online works in both ARCHIVE and NO ARCHIVE modes. You have no option to enable in order to use this feature, which is great. It does not work with an OFFLINE datafile.
+On the backup & recovery side, a flashback database does not revert the operation. A datafile is definitively moved. But after moving a datafile, like for any other operation on the database structure, you will have to perform a new full backup of the database. Otherwise, you will have to move the datafile(s) back before being able to restore your database…
+Finally, some files like temporary files, redo log files, and control files cannot be moved using this command, which is very helpful but can still be improved…
+
+## 资源
+
+1. [oracle 版本历史](https://en.wikipedia.org/wiki/Oracle_Database)
