@@ -54,12 +54,17 @@ SQL> show pdbs;
 ---------- ------------------------------ ---------- ----------
          2 PDB$SEED                       READ ONLY  NO
          3 ORCLPDB                        MOUNTED
+         
 SQL> alter session set container=ORCLPDB;
 
 Session altered.
 
 SQL> startup;
+
 Pluggable Database opened.
+
+# 保存状态 alter pluggable database all save state;
+
 SQL> create tablespace tbs_t2 datafile 't2.dbf' size 10M autoextend on;
 
 Tablespace created.
@@ -124,10 +129,16 @@ $ godbtest
 ## 备份 vagrant 
 
 ```sh
-$ vagrant halt
-$ vagrant package --output oracle12.2.box
-$ ls -hl /Volumes/e1t/soft/oracle12.2.box 
--rw-r--r--  1 bingoo  staff   5.7G 11  2 11:01 /Volumes/e1t/soft/oracle12.2.box
+➜  oracle12c-vagrant git:(master) ✗ vagrant halt
+==> default: Attempting graceful shutdown of VM...
+➜  oracle12c-vagrant git:(master) ✗ vagrant package --output oracle12.2.box 
+➜  oracle12c-vagrant git:(master) ✗ rm /Volumes/e1t/soft/oracle12.2.box
+➜  oracle12c-vagrant git:(master) ✗ vagrant package --output /Volumes/e1t/soft/oracle12.2.box
+==> default: Clearing any previously set forwarded ports...
+==> default: Exporting VM...
+==> default: Compressing package to: /Volumes/e1t/soft/oracle12.2.box
+➜  oracle12c-vagrant git:(master) ✗ ls -hl /Volumes/e1t/soft/oracle12.2.box
+-rw-r--r--  1 bingoo  staff   5.8G 11  2 12:32 /Volumes/e1t/soft/oracle12.2.box
 ```
 
 gzip 压缩没有效果
